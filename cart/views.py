@@ -1,19 +1,28 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from products.models import Product
 from .models import Cart, Order
-from django.contrib.auth.decorators import login_required
+
+
+# ------------------------
+# GET SESSION KEY
+# ------------------------
+def get_session_key(request):
+    if not request.session.session_key:
+        request.session.create()
+    return request.session.session_key
 
 
 # ------------------------
 # ADD TO CART
 # ------------------------
-@login_required
 def add_to_cart(request, product_id):
+
+    session_key = get_session_key(request)
 
     product = get_object_or_404(Product, id=product_id)
 
     item, created = Cart.objects.get_or_create(
-        user=request.user,
+        session_key=session_key,
         product=product
     )
 
@@ -21,16 +30,19 @@ def add_to_cart(request, product_id):
         item.quantity += 1
         item.save()
 
-    return redirect('cart')
+    return redirect("cart")
 
 
 # ------------------------
-# CART VIEW
+# CART
 # ------------------------
-@login_required
 def cart_view(request):
 
-    items = Cart.objects.filter(user=request.user)
+    session_key = get_session_key(request)
+
+    items = Cart.objects.filter(
+        session_key=session_key
+    )
 
     total = 0
 
@@ -38,40 +50,42 @@ def cart_view(request):
         item.subtotal = item.product.price * item.quantity
         total += item.subtotal
 
-    return render(request, 'cart/cart.html', {
-        'items': items,
-        'total': total
+    return render(request, "cart/cart.html", {
+        "items": items,
+        "total": total
     })
 
 
 # ------------------------
-# INCREASE QUANTITY
+# INCREASE
 # ------------------------
-@login_required
 def increase_quantity(request, item_id):
+
+    session_key = get_session_key(request)
 
     item = get_object_or_404(
         Cart,
         id=item_id,
-        user=request.user
+        session_key=session_key
     )
 
     item.quantity += 1
     item.save()
 
-    return redirect('cart')
+    return redirect("cart")
 
 
 # ------------------------
-# DECREASE QUANTITY
+# DECREASE
 # ------------------------
-@login_required
 def decrease_quantity(request, item_id):
+
+    session_key = get_session_key(request)
 
     item = get_object_or_404(
         Cart,
         id=item_id,
-        user=request.user
+        session_key=session_key
     )
 
     if item.quantity > 1:
@@ -80,52 +94,54 @@ def decrease_quantity(request, item_id):
     else:
         item.delete()
 
-    return redirect('cart')
-
-
-# ------------------------
-# ORDER HISTORY
-# ------------------------
-@login_required
-def order_history(request):
-
-    orders = Order.objects.filter(
-        user=request.user
-    ).order_by('-created_at')
-
-    return render(request, 'cart/orders.html', {
-        'orders': orders
-    })
+    return redirect("cart")
 
 
 # ------------------------
 # CHECKOUT
 # ------------------------
-@login_required
 def checkout(request):
 
-    items = Cart.objects.filter(user=request.user)
+    session_key = get_session_key(request)
 
-    total = sum(item.product.price * item.quantity for item in items)
+    items = Cart.objects.filter(
+        session_key=session_key
+    )
+
+    total = sum(
+        item.product.price * item.quantity
+        for item in items
+    )
 
     if request.method == "POST":
 
         Order.objects.create(
-            user=request.user,
-            full_name=request.POST.get('full_name'),
-            phone=request.POST.get('phone'),
-            address=request.POST.get('address'),
-            payment_method=request.POST.get('payment_method', 'COD'),
-            payment_status='Pending',
-            payment_screenshot=request.FILES.get('payment_screenshot'),
+            full_name=request.POST.get("full_name"),
+            phone=request.POST.get("phone"),
+            address=request.POST.get("address"),
+            payment_method=request.POST.get("payment_method", "COD"),
+            payment_status="Pending",
+            payment_screenshot=request.FILES.get("payment_screenshot"),
             total_price=total
         )
 
         items.delete()
 
-        return redirect('orders')
+        return redirect("cart")
 
-    return render(request, 'cart/checkout.html', {
-        'items': items,
-        'total': total
+    return render(request, "cart/checkout.html", {
+        "items": items,
+        "total": total
+    })
+
+
+# ------------------------
+# ORDERS
+# ------------------------
+def order_history(request):
+
+    orders = Order.objects.all().order_by("-created_at")
+
+    return render(request, "cart/orders.html", {
+        "orders": orders
     })
