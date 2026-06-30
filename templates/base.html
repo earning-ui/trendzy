@@ -18,24 +18,13 @@
 
         <div class="d-flex align-items-center gap-2">
 
-            <a href="{% url 'register' %}"
-               class="btn btn-success btn-sm">
-                Register
-            </a>
-
-            <a href="{% url 'login' %}"
-               class="btn btn-primary btn-sm">
-                Login
-            </a>
-
+            <!-- Cart -->
             <a href="{% url 'cart' %}"
                class="btn btn-warning btn-sm">
                 🛒 Cart
-                <span class="badge bg-dark">
-                    {{ request.user.cart_set.count }}
-                </span>
             </a>
 
+            <!-- Orders -->
             <a href="{% url 'orders' %}"
                class="btn btn-info btn-sm">
                 📦 Orders
