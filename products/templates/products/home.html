@@ -1,0 +1,58 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h1 class="mb-4">
+    Latest Products
+</h1>
+
+<form method="GET" class="mb-4">
+
+    <input
+        type="text"
+        name="q"
+        class="form-control"
+        placeholder="Search products">
+
+</form>
+
+<div class="row">
+
+{% for product in products %}
+
+<div class="col-md-3 mb-4">
+
+    <div class="card">
+
+        {% if product.image %}
+        <img
+            src="{{ product.image.url }}"
+            class="card-img-top">
+        {% endif %}
+
+        <div class="card-body">
+
+            <h5>
+                <a href="{% url 'product_detail' product.id %}">
+                    {{ product.name }}
+                </a>
+            </h5>
+
+            <p>
+                ${{ product.price }}
+            </p>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% empty %}
+
+<div class="col-12">
+    <div class="alert alert-warning">
+        No products found.
+    </div>
+</div>
+

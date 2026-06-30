@@ -1,0 +1,114 @@
+<h1 style="color:red;">TEST: TEMPLATE IS WORKING</h1>
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>PRODUCT LIST WORKING ✅</h1>
+<style>
+.product-card {
+    border: 1px solid #eee;
+    border-radius: 10px;
+    overflow: hidden;
+    transition: 0.3s;
+    background: #fff;
+    height: 100%;
+}
+
+.product-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+}
+
+.product-img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.product-body {
+    padding: 12px;
+}
+
+.product-title {
+    font-size: 15px;
+    font-weight: 600;
+    height: 40px;
+    overflow: hidden;
+}
+
+.price {
+    color: #f57224;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.old-price {
+    text-decoration: line-through;
+    font-size: 13px;
+    color: gray;
+}
+
+.btn-daraz {
+    width: 100%;
+    margin-top: 5px;
+    font-size: 14px;
+}
+
+.badge-discount {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    background: red;
+    color: white;
+    padding: 3px 6px;
+    font-size: 12px;
+    border-radius: 5px;
+}
+</style>
+
+<div class="container mt-4">
+    <div class="row">
+<h1 style="color:red;">PRODUCT LIST WORKING</h1>
+        {% for product in products %}
+        <div class="col-md-3 mb-4">
+
+            <div class="product-card position-relative">
+
+                {% if product.discount %}
+                <div class="badge-discount">
+                    -{{ product.discount }}%
+                </div>
+                {% endif %}
+
+                <img src="{{ product.image.url }}" class="product-img">
+
+                <div class="product-body">
+
+                    <div class="product-title">
+                        {{ product.name }}
+                    </div>
+
+                    <div class="price">
+                        Rs {{ product.price }}
+                        {% if product.old_price %}
+                        <span class="old-price">Rs {{ product.old_price }}</span>
+                        {% endif %}
+                    </div>
+
+                    <a href="{% url 'add_to_cart' product.id %}" class="btn btn-warning btn-sm btn-daraz">
+                        Add to Cart
+                    </a>
+
+                    <a href="{% url 'checkout_single' product.id %}" class="btn btn-danger btn-sm btn-daraz">
+                        Buy Now
+                    </a>
+
+                </div>
+            </div>
+
+        </div>
+        {% endfor %}
+
+    </div>
+</div>
+
+{% endblock %}
