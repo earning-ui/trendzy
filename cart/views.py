@@ -3,12 +3,14 @@ from products.models import Product
 from .models import Cart, Order
 from django.contrib.auth.decorators import login_required
 
+
+# ------------------------
+# ADD TO CART
+# ------------------------
+@login_required
 def add_to_cart(request, product_id):
 
-    product = get_object_or_404(
-        Product,
-        id=product_id
-    )
+    product = get_object_or_404(Product, id=product_id)
 
     item, created = Cart.objects.get_or_create(
         user=request.user,
@@ -22,32 +24,30 @@ def add_to_cart(request, product_id):
     return redirect('cart')
 
 
+# ------------------------
+# CART VIEW
+# ------------------------
+@login_required
 def cart_view(request):
 
-    items = Cart.objects.filter(
-        user=request.user
-    )
+    items = Cart.objects.filter(user=request.user)
 
     total = 0
 
     for item in items:
-        item.subtotal = (
-            item.product.price *
-            item.quantity
-        )
-
+        item.subtotal = item.product.price * item.quantity
         total += item.subtotal
 
-    return render(
-        request,
-        'cart/cart.html',
-        {
-            'items': items,
-            'total': total
-        }
-    )
+    return render(request, 'cart/cart.html', {
+        'items': items,
+        'total': total
+    })
 
 
+# ------------------------
+# INCREASE QUANTITY
+# ------------------------
+@login_required
 def increase_quantity(request, item_id):
 
     item = get_object_or_404(
@@ -62,6 +62,10 @@ def increase_quantity(request, item_id):
     return redirect('cart')
 
 
+# ------------------------
+# DECREASE QUANTITY
+# ------------------------
+@login_required
 def decrease_quantity(request, item_id):
 
     item = get_object_or_404(
@@ -79,66 +83,41 @@ def decrease_quantity(request, item_id):
     return redirect('cart')
 
 
+# ------------------------
+# ORDER HISTORY
+# ------------------------
+@login_required
 def order_history(request):
 
     orders = Order.objects.filter(
         user=request.user
     ).order_by('-created_at')
 
-    return render(
-        request,
-        'cart/orders.html',
-        {
-            'orders': orders
-        }
-    )
+    return render(request, 'cart/orders.html', {
+        'orders': orders
+    })
 
 
+# ------------------------
+# CHECKOUT
+# ------------------------
+@login_required
 def checkout(request):
 
-    items = Cart.objects.filter(
-        user=request.user
-    )
+    items = Cart.objects.filter(user=request.user)
 
-    total = 0
-
-    for item in items:
-        total += (
-            item.product.price *
-            item.quantity
-        )
+    total = sum(item.product.price * item.quantity for item in items)
 
     if request.method == "POST":
 
-        full_name = request.POST.get(
-            'full_name'
-        )
-
-        phone = request.POST.get(
-            'phone'
-        )
-
-        address = request.POST.get(
-            'address'
-        )
-
-        payment_method = request.POST.get(
-            'payment_method',
-            'COD'
-        )
-
-        payment_screenshot = request.FILES.get(
-            'payment_screenshot'
-        )
-
         Order.objects.create(
             user=request.user,
-            full_name=full_name,
-            phone=phone,
-            address=address,
-            payment_method=payment_method,
+            full_name=request.POST.get('full_name'),
+            phone=request.POST.get('phone'),
+            address=request.POST.get('address'),
+            payment_method=request.POST.get('payment_method', 'COD'),
             payment_status='Pending',
-            payment_screenshot=payment_screenshot,
+            payment_screenshot=request.FILES.get('payment_screenshot'),
             total_price=total
         )
 
@@ -146,11 +125,7 @@ def checkout(request):
 
         return redirect('orders')
 
-    return render(
-        request,
-        'cart/checkout.html',
-        {
-            'items': items,
-            'total': total
-        }
-    )
+    return render(request, 'cart/checkout.html', {
+        'items': items,
+        'total': total
+    })
